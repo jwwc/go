@@ -1,0 +1,45 @@
+1:检查本地是否已经生成过公钥(公钥一般用于配置与远程服务器上主要是github上)
+command: cd ~/.ssh
+2:如果没有生成过公钥，那么进行公钥的生成
+command: ssh-keygen
+3:将生成的公钥配置到github上
+4：初始化本地仓库
+command: gitinit
+5:添加远程仓库
+command: git remote add <name> <url>
+6:如果你还没有clone过远程仓库
+command: git remote add origin <url>
+7:查看已经添加的本地仓库
+command: git remote -v
+8:添加新更新的文件到缓存中
+command: git add 文件名(*表示当前目录下的所有文件)
+9:将新更新的缓存提交到本地仓库
+command: git commit -m "contributor"
+10:创建并且切换分支
+command:git checkout -b <branch-name>
+11:切换到分支
+command:git checkout <branch-name>
+12:删除分支
+command:git checkout -d <branch-name>
+13:拉取远程的仓库
+command:git pull <url>
+14:提交到远程仓库
+command:git push <url>
+15:查看当前状态
+command:git status
+16:查看当前提交过的的版本号
+command:git log
+17:回退版本号
+command:git reset --hard 版本号 
+18:查看分支
+command:git branch
+19:创建分支
+command:git branch <name>
+20:合并某个分支和当前分支
+command:git merge name
+21:显示工作区和暂存区之间的差异
+command:git diff
+22:下载远程仓库的所有变动
+command:git fetch <url>
+23:显示指定文件什么时候被修改过
+command:git blame <filename>
