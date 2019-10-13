@@ -1,0 +1,150 @@
+docker映像档包括：运行文档，配置环境，运行环境，运行依赖包
+操作系统发行版，内核
+docker是基于go语言实现的云开源项目
+docker解决的问题：解决了运行环境和配置问题软件容器，方便做持续集成并
+有助于整体发布的容器虚拟化技术
+虚拟机的缺点：
+资源占用多， 步骤冗余， 启动慢
+占用资源多：容器不需要捆绑一整个操作系统，只需要软件工作所需要的库
+资源和设置，系统因此而变的高效轻量。
+docker和传统的虚拟化技术相比的不同之处：
+传统虚拟机技术是虚拟出一套硬件，在其上运行出一个完整的操作系统，在
+该系统上再运行所需要的进程
+容器技术：容器内的应用进程直接运行在宿主的内核，容器内没有自己的内核，
+而且也没有进行硬件虚拟，因此容器要比传统虚拟机更为轻便
+每一个容器相互隔离，每个容器都有自己的文件系统，容器之间进程不会相互影响，能区分计算资源
+
+开发/运维(自运维 DevOps) 一次构建，随处运行
+1：更快速的应用交付和部署
+2：更快捷的升级和扩容
+3：更简单的系统运维
+4：更高效的计算资源利用
+linux查看系统版本： uname -r
+docker的三大要素：镜像，容器，仓库
+镜像：镜像相当于模板，可以用来创建多个容器
+容器：容器是镜像创建的实例，可以看成一个简易版的系统
+仓库：仓库是存放镜像文件的场所
+仓库和仓库注册器的区别：仓库注册器上往往放着多个仓库，每个仓库又包含着多个镜像，每个镜像有不同的标签
+最大的公开仓库：Docker Hub
+Docker本身是一个容器运行载体或称之为管理引擎(docker daeman),我们把一个应用程序打包好形成一个可交付的运行环境
+，这个打包好的运行环境似乎就是image镜像文件，只有这个镜像文件才能成为docker容器。
+一个容器经行一种服务
+docker简单的安装
+官方提供的脚本文档：get.docker.com
+第一步：curl -fsSL https://get.docker.com -o get-docker.sh
+第二步：sh get-docker.sh
+如果遇到dpkg was interrupted, you must manually run 'sudo dpkg --configure -a' to correct the problem.
+第三步：sudo dpkg --configure -a
+如果遇到数据资源config.dat被占用： DbDriver "config": /var/cache/debconf/config.dat is locked by another process: Resource temporarily unavailable
+第四步：sudo lsof /var/cache/debconf/config.dat查看被那个进程给占用了
+        sudo fuser /var/cache/deconf/config.dat
+第五步：杀死端口：kill 端口号
+docker version查看docker版本
+ubuntu下docker的配置文件：ls /etc/default/docker
+第六步：service docker {start|stop|restart|status}
+ssh协议连接服务器指令：ssh 用户名@ip地址 -p 端口
+docker daeman:http://www.sel.zju.edu.cn/?p=158
+Errors were encountered while processing:
+ /tmp/apt-dpkg-install-ZBvmLQ/099-docker-ce_5%3a19.03.3~3-0~ubuntu-bionic_amd64.deb
+E: Sub-process /usr/bin/dpkg returned an error code (1)
+解决方案：https://askubuntu.com/questions/148715/how-to-fix-package-is-in-a-very-bad-inconsistent-state-error
+	 https://www.cnblogs.com/xiaoliangge/p/9134585.html
+注意WSL不支持守护进程，所有让WSL使用docker，必须在window上安装docker
+
+
+
+
+使用ps -ef | grep docker来查看docker hub的镜像源
+docker run hello-world的命令解读
+hello-world为一个镜像，首先程序会在本地找这个镜像，如果本地没有找到，则从docker hub上进行拉取
+具体流程：先找容器，如果没有容器，则在本地找镜像，如果本地没有则从docker hub上进行拉取
+Docker是一个Client-Server结构的系统，Docker守护经常运行在主机上，然后通过Socket连接从客户端访问
+，守护进程从客户端接受命令管理运行在主机的容器。
+docker 为什么比VM要快：1 docker比虚拟机有着更少的抽象层，因为没有显示硬件虚拟化(Hypervisor)。
+		      2 docker利用的宿主机的内核，而不需要Guest OS
+常用的命令：docker version  docker安装的检查
+	    docker  info
+	    docker --help
+镜像命令：docker image 列出本地镜像  -a 列出所有(镜像是分层的)
+	 docker images -q查看镜像的id  -qa所有的id
+	 docker images --digests 显示镜像的摘要信息
+         docker --digests --no-trunc 显示完整的镜像信息
+         docker search xxx(镜像) 在docker hub上查找镜像
+		-s 列出收藏数不小于指定值的镜像
+		-automated:只列出automated build类型的镜像
+         docker pull 镜像名：版本号 没有写版本号的默认最新版
+	 docker rmi xxx(镜像名字ID）
+                    docker rmi -f 镜像ID 删除单个镜像
+		    docker rmi -f 镜像名1:tag 镜像名2:tag
+		    docker rmi -f $(docker images -qa) 删除全部
+容器命令：
+	docker run [options] image [command][arg]
+        options: --name="容器的新名字" 为容器指定一个名称
+                 -i 以交互式运行
+		 -t 创建一个伪终端
+                 -P 随机映射端口
+		 -p 指定一个映射端口
+	例子： docker run -it imageid
+	docker ps查看所有的容器
+        exit 停止退出容器
+	ctrl + P +Q 不停止退出容器
+	docker start 容器id  (启动容器)
+        docker stop 容器id
+	docker kill 容器id 强制停止
+        docker rm 容器id 删除容器
+        docker ps -a -q | xargs docker rm 删除多个容器，上一步结果传递给xargs
+	docker run -d 容器name
+        docker ps -a 查看发现容器已经退出
+	Docker 容器后台运行，就必须有一个前台的进程，容器运行的命令如果不是那些一直挂起的命令，就会自动退出
+查看容器日志： docker logs [args] 容器ID  -t 加入时间戳
+					 -f 跟随最新的日志打印
+					 --tail number 显示最后多少条
+查看容器内的进程 docker top 容器ID
+查看容器的细节   docker inspect 容器ID
+重新进去交互式容器 docker attach 容器ID
+		  docker exec -t  容器ID + 需要在容器中执行的操作(并没有进入到容器里面)
+把容器里面的数据宿主机上：docker cp 容器ID: /tmp/file /宿主机的path
+镜像：是一种轻量级，可执行的独立软件包，用来打包软件运行环境和基于运行环境开发的软件，强制包含代码，运行时库，环境变量，和配置文件
+UnionFS(联合文件系统):union文件系统是一种分层，轻量级并且高性能的文件系统，它支持对文件系统的修改作为一次提交来
+一层一层的叠加，同时将不同的目录挂载到同一个虚拟文件系统下，union文件系统是Docker镜像的基础，镜像可以通过分层来进行继承，基于基础镜像，可以制作各种镜像
+
+docker镜像的加载原理：
+	docker的镜像实际上由一层一层的文件系统组成，这种层级文件系统是UnionFS
+	bootfs(boot file system)主要包含bootloader和kernel，bootloader主要是引导加载kernel,Linux刚启动时会加载bootfs文件系统，在Docker镜像的底层是bootfs,这是
+与我们典型的Linux/Unix系统一样的，包含boot加载器和内核，当boot加载完成之后整个内核就在内存之中了，此时内存的使用
+权转给内核，此时系统会卸载bootfs
+rootfs(root file system)在bootfs之上，包含的就是典型Linux系统的/dev /proc /bin /etc 等目标文件，rootfs有不同的发行版本，就比如Ubantu,Centos等等
+docker镜像为什么采用这种分层结构呢？
+最大的好处就是共享资源：比如，有多个镜像从相同的base镜像中构建而来，那么宿宿主机只需要保存一份base镜像，同时内存中也只需要加载一份base镜像，就可以为容器服务了，而且镜像的每一层都可以被共享。
+docker commit 提交副本使之成为一个新的镜像
+	      docker commit -m "描述信息" -a "作者" 容器ID 新建镜像名:[label]
+test: docker run -it -p 8888:8080 tomcat 8888为容器对外暴露的端口，8080为宿主机端口
+后台启动tomcat: 	docker run -d -p 6666:8080 tomcat
+
+
+容器数据卷：对容器中运行得到的数据进行持久化的数据卷和容器间的继承和共享数据
+容器之间希望有可能共享数据
+
+redis:
+
+
+在容器内部添加数据卷： 1 直接命令添加
+		      2 dockerfile 添加
+命令直接添加  docker run -it -v /宿主机决定路径的目录： /容器内目录  镜像名
+查看数据卷是否挂载成功
+容器和主机之间的数据共享
+容器退出后，主机修改后数据是否同步
+命令权限
+dockerfile image的脚本文件的描述
+docker build -f /mydocker/dockerfile -t wuchaochao/centos 用于构建镜像
+数据卷容器：命名的容器挂载数据卷，其他容器通过挂载这个父容器实现数据共享，挂载数据卷的容器，称为数据卷容器
+
+docker的语法格式：保留字必须大写
+		  #表示注释
+		  每条指令都会创建一个镜像层，并对镜像进行提交
+dockerfile的大致流程
+		    1：docker从基础镜像运行一个容器
+		    2：执行一条指令并对容器做出修改
+		    3：执行类似docker commit的操作提交一个新的镜像层
+		    4：docker在基于刚提交的镜像运行一个新的容器
+		    5：执行dockerfile中的下一条指令直到所有指令都执行完成
