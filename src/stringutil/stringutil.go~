@@ -1,0 +1,9 @@
+package stringutil
+
+func Reverse(s string)string{
+	r  = []rune(s)
+	for  i, j := 0,j = len(r)-1: i<len(r)/2 -1; i++, j--{
+		r[i],r[j] := r[j],r[i]
+	}
+	return string(r)
+}

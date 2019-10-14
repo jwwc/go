@@ -1,0 +1,314 @@
+godoc 所做的调整， 就是将已缩进的文本以等宽字体显示，来适应对应的程序片段。 fmt 包的注释就用了这种不错的效果
+godoc 是否会重新格式化注释取决于上下文，因此必须确保它们看起来清晰易辨： 使用正确的拼写、标点和语句结构以及折叠长行等。
+
+在包中，任何顶级声明前面的注释都将作为该声明的文档注释。 在程序中，每个可导出（首字母大写）的名称都应该有文档注释。
+
+文档注释最好是完整的句子，这样它才能适应各种自动化的展示。 第一句应当以被声明的东西开头，并且是单句的摘要。
+Instance :
+// Compile 用于解析正则表达式并返回，如果成功，则 Regexp 对象就可用于匹配所针对的文本。
+func Compile(str string) (regexp *Regexp, err error) {
+若注释总是以名称开头，godoc 的输出就能通过 grep 变得更加有用。假如你记不住“Compile”这个名称，而又在找正则表达式的解析函数， 那就可以运行
+获取器
+Go并不对获取器（getter）和设置器（setter）提供自动支持。 你应当自己提供获取器和设置器，通常很值得这样做，但若要将 Get 放到获取器的名字中，既不符合习惯，也没有必要。若你有个名为 owner （小写，未导出）的字段，其获取器应当名为 Owner（大写，可导出）而非 GetOwner。大写字母即为可导出的这种规定为区分方法和字段提供了便利。 若要提供设置器方法，SetOwner 是个不错的选择。两个命名看起来都很合理：
+
+owner := obj.Owner()
+if owner != user {
+	obj.SetOwner(user)
+}
+按照约定，只包含一个方法的接口应当以该方法的名称加上-er后缀来命名，如 Reader、Writer、 Formatter、CloseNotifier 等。
+警告：无论如何，你都不应将一个控制结构（if、for、switch 或 select）的左大括号放在下一行。如果这样做，就会在大括号前面插入一个分号，这可能引起不需要的效果。 你应该这样写
+Go不再使用 do 或 while 循环，只有一个更通用的 for；switch 要更灵活一点
+
+if 和 switch 像 for一样可接受可选的初始化语句； 此外，还有一个包含类型选择和多路通信复用器的新控制结构：select。 其语法也有些许不同：没有圆括号，而其主体必须始终使用大括号括住
+在Go的库中，你会发现若 if 语句不会执行到下一条语句时，亦即其执行体 以 break、continue、goto 或 return 结束时，不必要的 else 会被省略。
+
+f, err := os.Open(name)
+if err != nil {
+	return err
+}
+在满足下列条件时，已被声明的变量 v 可出现在:= 声明中：
+
+本次声明与已声明的 v 处于同一作用域中（若 v 已在外层作用域中声明过，则此次声明会创建一个新的变量§），
+在初始化中与其类型相应的值才能赋予 v，且
+在此次声明中至少另有一个变量是新声明的。
+For
+Go的 for 循环类似于C，但却不尽相同。它统一了 for 和 while，不再有 do-while 了。它有三种形式，但只有一种需要分号。
+
+// 如同C的for循环
+for init; condition; post { }
+
+// 如同C的while循环
+for condition { }
+
+// 如同C的for(;;)循环
+for { }
+若你想遍历数组、切片、字符串或者映射，或从信道中读取消息， range 子句能够帮你轻松实现循环。
+
+for key, value := range oldMap {
+	newMap[key] = value
+}
+若你只需要该遍历中的第一个项（键或下标），去掉第二个就行了：
+
+for key := range m {
+	if key.expired() {
+		delete(m, key)
+	}
+}
+若你只需要该遍历中的第二个项（值），请使用空白标识符，即下划线来丢弃第一个值：
+
+sum := 0
+for _, value := range array {
+	sum += value
+}
+对于字符串，range 能够提供更多便利。它能通过解析UTF-8， 将每个独立的Unicode码点分离出来。错误的编码将占用一个字节，并以符文U+FFFD来代替。 （名称“符文”和内建类型 rune 是Go对单个Unicode码点的成称谓。 详情见语言规范）。循环
+
+for pos, char := range "日本\x80語" { // \x80 是个非法的UTF-8编码
+	fmt.Printf("字符 %#U 始于字节位置 %d\n", char, pos)
+}
+将打印
+
+字符 U+65E5 '日' 始于字节位置 0
+字符 U+672C '本' 始于字节位置 3
+字符 U+FFFD '�' 始于字节位置 6
+字符 U+8A9E '語' 始于字节位置 7
+
+Go没有逗号操作符，而 ++ 和 -- 为语句而非表达式。 因此，若你想要在 for 中使用多个变量，应采用平行赋值的方式 （因为它会拒绝 ++ 和 --）.
+
+Switch
+Go的 switch 比C的更通用。其表达式无需为常量或整数，case 语句会自上而下逐一进行求值直到匹配为止。若 switch 后面没有表达式，它将匹配 true，因此，我们可以将 if-else-if-else 链写成一个 switch，这也更符合Go的风格。
+
+func unhex(c byte) byte {
+	switch {
+	case '0' <= c && c <= '9':
+		return c - '0'
+	case 'a' <= c && c <= 'f':
+		return c - 'a' + 10
+	case 'A' <= c && c <= 'F':
+		return c - 'A' + 10
+	}
+	return 0
+
+switch 并不会自动下溯，但 case 可通过逗号分隔来列举相同的处理条件。
+func shouldEscape(c byte) bool {
+	switch c {
+	case ' ', '?', '&', '=', '#', '+', '%':
+		return true
+	}
+	return false
+}
+尽管它们在Go中的用法和其它类C语言差不多，但 break 语句可以使 switch 提前终止。不仅是 switch， 有时候也必须打破层层的循环。在Go中，我们只需将标签放置到循环外，然后 “蹦”到那里即可。下面的例子展示了二者的用法。
+
+Loop:
+	for n := 0; n < len(src); n += size {
+		switch {
+		case src[n] < sizeOne:
+			if validateOnly {
+				break
+			}
+			size = 1
+			update(src[n])
+
+		case src[n] < sizeTwo:
+			if n+1 >= len(src) {
+				err = errShortInput
+				break Loop
+			}
+			if validateOnly {
+				break
+			}
+			size = 2
+			update(src[n] + src[n+1]<<shift)
+		}
+	}
+  类型选择
+switch 也可用于判断接口变量的动态类型。如 类型选择 通过圆括号中的关键字 type 使用类型断言语法。若 switch 在表达式中声明了一个变量，那么该变量的每个子句中都将有该变量对应的类型。
+
+var t interface{}
+t = functionOfSomeType()
+switch t := t.(type) {
+default:
+	fmt.Printf("unexpected type %T", t)       // %T 输出 t 是什么类型
+case bool:
+	fmt.Printf("boolean %t\n", t)             // t 是 bool 类型
+case int:
+	fmt.Printf("integer %d\n", t)             // t 是 int 类型
+case *bool:
+	fmt.Printf("pointer to boolean %t\n", *t) // t 是 *bool 类型
+case *int:
+	fmt.Printf("pointer to integer %d\n", *t) // t 是 *int 类型
+}
+可命名结果形参
+Go函数的返回值或结果“形参”可被命名，并作为常规变量使用，就像传入的形参一样。 命名后，一旦该函数开始执行，它们就会被初始化为与其类型相应的零值； 若该函数执行了一条不带实参的 return 语句，则结果形参的当前值将被返回。
+
+此名称不是强制性的，但它们能使代码更加简短清晰：它们就是文档。若我们命名了 nextInt 的结果，那么它返回的 int 就值如其意了。
+
+func nextInt(b []byte, pos int) (value, nextPos int) {
+由于被命名的结果已经初始化，且已经关联至无参数的返回，它们就能让代码简单而清晰。 下面的 io.ReadFull 就是个很好的例子：
+
+func ReadFull(r Reader, buf []byte) (n int, err error) {
+	for len(buf) > 0 && err == nil {
+		var nr int
+		nr, err = r.Read(buf)
+		n += nr
+		buf = buf[nr:]
+	}
+	return
+}
+Go的 defer 语句用于预设一个函数调用（即推迟执行函数）， 该函数会在执行 defer 的函数返回之前立即执行。它显得非比寻常， 但却是处理一些事情的有效方式，例如无论以何种路径返回，都必须释放资源的函数。 典型的例子就是解锁互斥和关闭文件。
+
+// Contents 将文件的内容作为字符串返回。
+func Contents(filename string) (string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()  // f.Close 会在我们结束后运行。
+
+	var result []byte
+	buf := make([]byte, 100)
+	for {
+		n, err := f.Read(buf[0:])
+		result = append(result, buf[0:n]...) // append 将在后面讨论。
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", err  // 我们在这里返回后，f 就会被关闭。
+		}
+	}
+	return string(result), nil // 我们在这里返回后，f 就会被关闭。
+}
+被推迟函数的实参（如果该函数为方法则还包括接收者）在推迟执行时就会求值， 而不是在调用执行时才求值。这样不仅无需担心变量值在函数执行时被改变， 同时还意味着单个已推迟的调用可推迟多个函数的执行。下面是个简单的例子。
+
+for i := 0; i < 5; i++ {
+	defer fmt.Printf("%d ", i)
+}
+被推迟的函数按照后进先出（LIFO）的顺序执行，因此以上代码在函数返回时会打印 4 3 2 1 0。一个更具实际意义的例子是通过一种简单的方法， 用程序来跟踪函数的执行。
+new 分配
+Go提供了两种分配原语，即内建函数 new 和 make。 它们所做的事情不同，所应用的类型也不同。它们可能会引起混淆，但规则却很简单。
+让我们先来看看 new。这是个用来分配内存的内建函数， 但与其它语言中的同名函数不同，它不会初始化内存，只会将内存置零。
+也就是说，new(T) 会为类型为 T 的新项分配已置零的内存空间， 并返回它的地址，也就是一个类型为 *T 的值。
+用Go的术语来说，它返回一个指针， 该指针指向新分配的，类型为 T 的零值。
+
+复合字面同样可用于创建数组、切片以及映射，字段标签是索引还是映射键则视情况而定。 在下例初始化过程中，无论 Enone、Eio 和 Einval 的值是什么，只要它们的标签不同就行。
+
+a := [...]string   {Enone: "no error", Eio: "Eio", Einval: "invalid argument"}
+s := []string      {Enone: "no error", Eio: "Eio", Einval: "invalid argument"}
+m := map[int]string{Enone: "no error", Eio: "Eio", Einval: "invalid argument"}
+
+下面的例子阐明了 new 和 make 之间的区别：
+
+var p *[]int = new([]int)       // 分配切片结构；*p == nil；基本没用
+var v  []int = make([]int, 100) // 切片 v 现在引用了一个具有 100 个 int 元素的新数组
+
+// 没必要的复杂：
+var p *[]int = new([]int)
+*p = make([]int, 100, 100)
+
+// 习惯用法：
+v := make([]int, 100)
+请记住，make 只适用于映射、切片和信道且不返回指针。若要获得明确的指针， 请使用 new 分配内存
+
+数组为值的属性很有用，但代价高昂；若你想要C那样的行为和效率，你可以传递一个指向该数组的指针。
+
+func Sum(a *[3]float64) (sum float64) {
+	for _, v := range *a {
+		sum += v
+	}
+	return
+}
+
+array := [...]float64{7.0, 8.5, 9.1}
+x := Sum(&array)  // 注意显式的取址操作
+但这并不是Go的习惯用法，切片才是。
+
+切片
+切片通过对数组进行封装，为数据序列提供了更通用、强大而方便的接口。 除了矩阵变换这类需要明确维度的情况外，Go中的大部分数组编程都是通过切片来完成的。
+
+func Append(slice, data[]byte) []byte {
+	l := len(slice)
+	if l + len(data) > cap(slice) {  // 重新分配
+		// 为了后面的增长，需分配两份。
+		newSlice := make([]byte, (l+len(data))*2)
+		// copy 函数是预声明的，且可用于任何切片类型。
+		copy(newSlice, slice)
+		slice = newSlice
+	}
+	slice = slice[0:l+len(data)]
+	for i, c := range data {
+		slice[l+i] = c
+	}
+	return slice
+}
+
+映射
+映射是方便而强大的内建数据结构，它可以关联不同类型的值。其键可以是任何相等性操作符支持的类型， 如整数、浮点数、复数、字符串、指针、接口（只要其动态类型支持相等性判断）、结构以及数组。 切片不能用作映射键，因为它们的相等性还未定义。与切片一样，映射也是引用类型。 若将映射传入函数中，并更改了该映射的内容，则此修改对调用者同样可见。
+
+映射可使用一般的复合字面语法进行构建，其键-值对使用逗号分隔，因此可在初始化时很容易地构建它们。
+
+var timeZone = map[string]int{
+	"UTC":  0*60*60,
+	"EST": -5*60*60,
+	"CST": -6*60*60,
+	"MST": -7*60*60,
+	"PST": -8*60*60,
+}
+
+若仅需判断映射中是否存在某项而不关心实际的值，可使用空白标识符 （_）来代替该值的一般变量。
+
+_, present := timeZone[tz]
+
+要删除映射中的某项，可使用内建函数 delete，它以映射及要被删除的键为实参。 即便对应的键不在该映射中，此操作也是安全的。
+
+delete(timeZone, "PDT")  // 现在用标准时间
+
+追加
+现在我们要对内建函数 append 的设计进行补充说明。append 函数的签名不同于前面我们自定义的 Append 函数。大致来说，它就像这样：
+
+func append(slice []T, 元素 ...T) []T
+其中的 T 为任意给定类型的占位符。实际上，你无法在Go中编写一个类型 T 由调用者决定的函数。这也就是为何 append 为内建函数的原因：它需要编译器的支持。
+append 会在切片末尾追加元素并返回结果。我们必须返回结果， 原因与我们手写的 Append 一样，即底层数组可能会被改变。以下简单的例子
+
+x := []int{1,2,3}
+x = append(x, 4, 5, 6)
+fmt.Println(x)
+
+x := []int{1,2,3}
+y := []int{4,5,6}
+x = append(x, y...)
+fmt.Println(x)
+
+
+iota:怎么使用？
+
+
+
+type Sequence []int
+
+// Methods required by sort.Interface.
+// sort.Interface 所需的方法。
+func (s Sequence) Len() int {
+    return len(s)
+}
+func (s Sequence) Less(i, j int) bool {
+    return s[i] < s[j]
+}
+func (s Sequence) Swap(i, j int) {
+    s[i], s[j] = s[j], s[i]
+}
+
+// Method for printing - sorts the elements before printing.
+// 用于打印的方法 - 在打印前对元素进行排序。
+func (s Sequence) String() string {
+    sort.Sort(s)
+    str := "["
+    for i, elem := range s {
+        if i > 0 {
+            str += " "
+        }
+        str += fmt.Sprint(elem)
+    }
+    return str + "]"
+}
+
+接口转换?
