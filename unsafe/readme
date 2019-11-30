@@ -1,0 +1,9 @@
+GO版无类型指针和数值化的指针：
+var p unsafe.Pointer = nil // unsafe
+var q uintptr = uintptr(p) //builtin
+C版无类型指针和数值化的指针
+void  *p = NULL
+uintptr_t q = (uintptr_t)(p); //<stdint.h>
+unsafe.Pointer 是go指针和c数组转换的中介
+uintptr是Go中数值和指针转换的中介
+

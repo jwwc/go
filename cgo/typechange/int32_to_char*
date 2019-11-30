@@ -1,0 +1,10 @@
+// int32 => *C.char
+var x = int32(9527)
+var p *C.char = (*C.char)(unsafe.Pointer(uintptr(x)))
+// *C.char => int32
+var y = *C.char
+var q int32 = int32(uintptr(unsafe.Pointer(y)))
+第一步: int32 => uintptr
+第二步：uintptr => unsafe.Pointer
+第三步：unsafe.Pointer => *C.char
+反之亦然

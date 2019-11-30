@@ -1,0 +1,10 @@
+var p []X
+var q []Y //q = p
+pHdr := (*reflect.SliceHeader)(unsafe.Pointer(&p))
+qHdr := (*reflect.SliceHeader)(unsafe.Pointer(&q))
+
+pHdr.Data = qHdr.Data
+pHdr.Len = qHdr.Len * unsafe.Sizeof(q[0]) /unsafe.Sizeof(p[0])
+pHdr.Cap = qHdr.Cap * unsafe.Sizeof(q[0]) /unsafe.Sizeof(q[0])
+//所有切片拥有相同的头部reflect.SliceHeader
+//重新构造切片头部即可完成转换
